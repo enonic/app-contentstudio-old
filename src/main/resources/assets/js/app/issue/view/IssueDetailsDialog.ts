@@ -41,6 +41,7 @@ import PrincipalType = api.security.PrincipalType;
 import PrincipalKey = api.security.PrincipalKey;
 import PrincipalLoader = api.security.PrincipalLoader;
 import ComboBox = api.ui.selector.combobox.ComboBox;
+import RoleKeys = api.security.RoleKeys;
 
 export class IssueDetailsDialog
     extends SchedulableDialog {
@@ -185,8 +186,10 @@ export class IssueDetailsDialog
 
     private createAssigneesPanel() {
         const assigneesPanel = new Panel();
-        let userLoader = new PrincipalLoader().setAllowedTypes([PrincipalType.USER]).skipPrincipals(
-            [PrincipalKey.ofAnonymous(), PrincipalKey.ofSU()]);
+        let userLoader = new PrincipalLoader()
+            .setAllowedTypes([PrincipalType.USER])
+            .setRequiredRoles([RoleKeys.CONTENT_MANAGER_APP, RoleKeys.CMS_ADMIN, RoleKeys.CMS_EXPERT, RoleKeys.ADMIN])
+            .skipPrincipals([PrincipalKey.ofAnonymous(), PrincipalKey.ofSU()]);
         this.assigneesCombobox = new PrincipalComboBoxBuilder().setLoader(userLoader).build();
         const updateTabCount = (save) => {
             const val = this.assigneesCombobox.getValue();
