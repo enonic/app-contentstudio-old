@@ -73,6 +73,7 @@ export class IssueDetailsDialog
     private commentsList: IssueCommentsList;
     private commentTextArea: IssueCommentTextArea;
     private assigneesCombobox: api.ui.security.PrincipalComboBox;
+    private updatedListeners: { (issue: Issue): void }[] = [];
 
     private constructor() {
         super(<DependantItemsWithProgressDialogConfig> {
@@ -115,7 +116,7 @@ export class IssueDetailsDialog
         this.loadCurrentUser().done(currentUser => {
             this.commentTextArea.setUser(currentUser);
         });
-        this.initRouting();
+
         this.handleIssueGlobalEvents();
         this.initActions();
     }
@@ -192,14 +193,18 @@ export class IssueDetailsDialog
             .skipPrincipals([PrincipalKey.ofAnonymous(), PrincipalKey.ofSU()]);
         this.assigneesCombobox = new PrincipalComboBoxBuilder().setLoader(userLoader).build();
         const updateTabCount = (save) => {
-            const val = this.assigneesCombobox.getValue();
-            const num = !api.util.StringHelper.isBlank(val) ? val.split(ComboBox.VALUE_SEPARATOR).length : 0;
+            let num = 0;
+            const loader = this.assigneesCombobox.getLoader();
+            if (loader.isPreLoaded() || loader.isLoaded()) {
+                num = this.assigneesCombobox.getSelectedValues().length;
+            }
             this.assigneesTab.setHtml(i18n('field.assignees') + (num > 0 ? ` (${num})` : ''));
             if (save) {
                 this.debouncedUpdateIssue(this.issue.getIssueStatus(), true);
             }
         };
-        this.assigneesCombobox.onValueChanged(event => updateTabCount(false));
+
+        this.assigneesCombobox.onValueLoaded(options => updateTabCount(false));
         this.assigneesCombobox.onOptionSelected(option => updateTabCount(true));
         this.assigneesCombobox.onOptionDeselected(option => updateTabCount(true));
         assigneesPanel.appendChild(this.assigneesCombobox);
@@ -269,6 +274,8 @@ export class IssueDetailsDialog
         if (this.isRendered()) {
             this.tabPanel.selectPanelByIndex(0);
         }
+
+        Router.setHash('issue/' + this.issue.getId());
     }
 
     private createSubTitle() {
@@ -351,14 +358,6 @@ export class IssueDetailsDialog
         });
     }
 
-    private initRouting() {
-        this.onShown(() => {
-            Router.setHash('issue/' + this.issue.getId());
-        });
-
-        this.onClosed(Router.back);
-    }
-
     private handleIssueGlobalEvents() {
         const updateHandler: Function = api.util.AppHelper.debounce((issue: Issue) => {
             this.setIssue(issue);
@@ -419,7 +418,9 @@ export class IssueDetailsDialog
 
             this.commentsList.setParentIssue(issue);
 
-            this.assigneesCombobox.setValue(issue.getApprovers().join(ComboBox.VALUE_SEPARATOR));
+            const newAssignees = issue.getApprovers().join(ComboBox.VALUE_SEPARATOR);
+            this.assigneesCombobox.setValue(newAssignees, false, true); // force reload value in case some users have been deleted
+
             this.commentTextArea.setValue('', true);
             this.setReadOnly(issue && issue.getIssueStatus() === IssueStatus.CLOSED);
         }
@@ -577,13 +578,14 @@ export class IssueDetailsDialog
             .setAutoSave(autoSave)
             .setApprovers(this.assigneesCombobox.getSelectedDisplayValues().map(o => o.getKey()))
             .setPublishRequest(publishRequest)
-            .sendAndParse().then(() => {
+            .sendAndParse().then((updatedIssue: Issue) => {
                 if (statusChanged) {
                     api.notify.showFeedback(i18n('notify.issue.status', IssueStatusFormatter.formatStatus(newStatus)));
                     this.toggleControlsAccordingToStatus(newStatus);
                 } else {
                     api.notify.showFeedback(i18n('notify.issue.updated'));
                 }
+                this.notifyIssueUpdated(updatedIssue);
                 this.skipNextServerUpdatedEvent = true;
             })
             .catch((reason: any) => api.DefaultErrorHandler.handle(reason));
@@ -657,6 +659,7 @@ export class IssueDetailsDialog
     close() {
         this.getItemList().clearExcludeChildrenIds();
         super.close(false);
+        Router.back();
     }
 
     private areSomeItemsOffline(): boolean {
@@ -686,5 +689,17 @@ export class IssueDetailsDialog
 
     protected hasSubDialog(): boolean {
         return true;
+    }
+
+    public onIssueUpdated(listener: (issue: Issue) => void) {
+        this.updatedListeners.push(listener);
+    }
+
+    public unIssueUpdated(listener: (issue: Issue) => void) {
+        this.updatedListeners = this.updatedListeners.filter(curr => curr !== listener);
+    }
+
+    private notifyIssueUpdated(issue: Issue) {
+        this.updatedListeners.forEach(listener => listener(issue));
     }
 }
