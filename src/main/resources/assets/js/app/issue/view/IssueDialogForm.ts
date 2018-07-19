@@ -11,10 +11,10 @@ import FormItem = api.ui.form.FormItem;
 import ValidityChangedEvent = api.ValidityChangedEvent;
 import PrincipalKey = api.security.PrincipalKey;
 import ContentId = api.content.ContentId;
-import UserStoreKey = api.security.UserStoreKey;
 import i18n = api.util.i18n;
 import ContentTreeSelectorItem = api.content.resource.ContentTreeSelectorItem;
 import RichComboBox = api.ui.selector.combobox.RichComboBox;
+import RoleKeys = api.security.RoleKeys;
 import {Issue} from '../Issue';
 
 export class IssueDialogForm
@@ -74,8 +74,10 @@ export class IssueDialogForm
 
         this.descriptionText = new PEl('description-text');
 
-        const principalLoader = new PrincipalLoader().setAllowedTypes([PrincipalType.USER]).skipPrincipals(
-            [PrincipalKey.ofAnonymous(), PrincipalKey.ofSU()]);
+        const principalLoader = new PrincipalLoader()
+            .setRequiredRoles([RoleKeys.CONTENT_MANAGER_APP, RoleKeys.CMS_ADMIN, RoleKeys.CMS_EXPERT, RoleKeys.ADMIN])
+            .skipPrincipals([PrincipalKey.ofAnonymous(), PrincipalKey.ofSU()])
+            .setAllowedTypes([PrincipalType.USER]);
 
         this.approversSelector = api.ui.security.PrincipalComboBox.create().setLoader(principalLoader).setMaxOccurences(0).setCompactView(
             this.compactAssigneesView).build();
