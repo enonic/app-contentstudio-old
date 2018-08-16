@@ -97,6 +97,26 @@ export class DialogTogglableItemList
         );
     }
 
+    public getActiveTogglersIds(): ContentId[] {
+        let ids: ContentId[] = [];
+        this.getItemViews().forEach(itemView => {
+            if (itemView.includesChildren()) {
+                ids.push(itemView.getContentId());
+            }
+        });
+        return ids;
+    }
+
+    public getInactiveTogglersIds(): ContentId[] {
+        let ids: ContentId[] = [];
+        this.getItemViews().forEach(itemView => {
+            if (!itemView.includesChildren()) {
+                ids.push(itemView.getContentId());
+            }
+        });
+        return ids;
+    }
+
     public refreshList() {
         super.refreshList();
         this.debounceNotifyListChanged();
