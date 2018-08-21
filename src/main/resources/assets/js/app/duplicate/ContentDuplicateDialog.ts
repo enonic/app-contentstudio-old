@@ -5,10 +5,12 @@ import {ContentDuplicatePromptEvent} from '../browse/ContentDuplicatePromptEvent
 import {DialogTogglableItemList} from '../dialog/DialogTogglableItemList';
 import ContentSummaryAndCompareStatus = api.content.ContentSummaryAndCompareStatus;
 import DuplicateContentRequest = api.content.resource.DuplicateContentRequest;
+import ResolveDuplicateDependenciesRequest = api.content.resource.ResolveDuplicateDependenciesRequest;
 import DuplicatableId = api.content.resource.DuplicatableId;
 import ManagedActionExecutor = api.managedaction.ManagedActionExecutor;
 import ListBox = api.ui.selector.list.ListBox;
 import i18n = api.util.i18n;
+import ContentId = api.content.ContentId;
 
 export class ContentDuplicateDialog
     extends DependantItemsWithProgressDialog
@@ -43,22 +45,28 @@ export class ContentDuplicateDialog
         this.initItemListListeners();
     }
 
-    private initItemListListeners() {
-        const reloadDependenciesDebounced = api.util.AppHelper.debounce(() => {
-            if (this.getItemList().hasActiveTogglers()) {
-                this.manageDescendants();
-            } else {
-                this.clearDependantItems();
-            }
-        }, 100, false);
-
-        this.getItemList().onItemsRemoved(reloadDependenciesDebounced);
-        this.getItemList().onItemsAdded(reloadDependenciesDebounced);
-        this.getItemList().onChildrenListChanged(reloadDependenciesDebounced);
+    protected getContentsToLoad(): ContentSummaryAndCompareStatus[] {
+        return this.getItemList().getItemViews().map(view => view.getBrowseItem().getModel());
     }
 
-    protected getContentsToLoad(): ContentSummaryAndCompareStatus[] {
-        return this.getItemList().getItemViews().filter(view => view.includesChildren()).map(view => view.getBrowseItem().getModel());
+    protected loadDescendantIds() {
+        const contents = this.getContentsToLoad();
+
+        const itemsIds = this.getItemList().getItems().map(content => content.getContentId());
+
+        return ResolveDuplicateDependenciesRequest.create()
+            .setIds(contents.map(content => content.getContentSummary().getContentId()))
+            .setExcludeChildrenIds(this.getItemList().getInactiveTogglersIds())
+            .build()
+            .sendAndParse().then((result: ContentId[]) => {
+                this.dependantIds = result;
+
+                if (this.dependantIds) {
+                    this.dependantIds = this.dependantIds.filter(dependantId =>
+                        !api.util.ArrayHelper.contains(itemsIds, dependantId)
+                    );
+                }
+            });
     }
 
     protected manageDescendants() {
@@ -76,6 +84,16 @@ export class ContentDuplicateDialog
                 this.actionButton.giveFocus();
             });
         });
+    }
+
+    private initItemListListeners() {
+        const reloadDependenciesDebounced = api.util.AppHelper.debounce(() => {
+            this.manageDescendants();
+        }, 100, false);
+
+        this.getItemList().onItemsRemoved(reloadDependenciesDebounced);
+        this.getItemList().onItemsAdded(reloadDependenciesDebounced);
+        this.getItemList().onChildrenListChanged(reloadDependenciesDebounced);
     }
 
     manageContentToDuplicate(contents: ContentSummaryAndCompareStatus[]): ContentDuplicateDialog {
