@@ -180,8 +180,20 @@ export class NewContentDialog extends api.ui.dialog.ModalDialog {
     }
 
     open() {
+        this.getContentPanel().getParentElement().appendChild(this.loadMask);
+        this.updateDialogTitlePath();
+
+        this.fileInput.disable();
+        //this.uploader.setEnabled(false);
+        this.resetFileInputWithUploader();
+
         super.open();
-        let keyBindings = [
+
+        // Reload content types each time when dialog is show.
+        // It is slow but newly create content types are displayed.
+        this.loadContentTypes();
+
+        const keyBindings = [
             new api.ui.KeyBinding('up', () => {
                 api.dom.FormEl.moveFocusToPrevFocusable(api.dom.Element.fromHtmlElement(<HTMLElement>document.activeElement),
                     'input,li');
@@ -194,36 +206,16 @@ export class NewContentDialog extends api.ui.dialog.ModalDialog {
         api.ui.KeyBindings.get().bindKeys(keyBindings);
     }
 
-    show() {
-        this.getContentPanel().getParentElement().appendChild(this.loadMask);
-        this.updateDialogTitlePath();
-
-        this.fileInput.disable();
-        //this.uploader.setEnabled(false);
-        this.resetFileInputWithUploader();
-
-        super.show();
-
-        // CMS-3711: reload content types each time when dialog is show.
-        // It is slow but newly create content types are displayed.
-        this.loadContentTypes();
-    }
-
-    hide() {
-        this.mostPopularContentTypes.hide();
-        this.clearAllItems();
-        super.hide();
-
-        if (this.getContentPanel().getParentElement().hasChild(this.loadMask)) {
-            this.getContentPanel().getParentElement().removeChild(this.loadMask);
-        }
-    }
-
     close() {
         this.fileInput.reset();
 
         if (this.isVisible()) {
+            this.mostPopularContentTypes.hide();
+            this.clearAllItems();
             super.close();
+            if (this.getContentPanel().getParentElement().hasChild(this.loadMask)) {
+                this.getContentPanel().getParentElement().removeChild(this.loadMask);
+            }
         }
     }
 

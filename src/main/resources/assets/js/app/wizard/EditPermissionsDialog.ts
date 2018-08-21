@@ -233,13 +233,13 @@ export class EditPermissionsDialog
         return deferred.promise;
     }
 
-    show() {
+    open() {
         if (this.contentPath) {
             this.getHeader().setPath(this.contentPath.toString());
         } else {
             this.getHeader().setPath('');
         }
-        super.show();
+        super.open();
 
         if (this.comboBox.getComboBox().isVisible()) {
             this.comboBox.giveFocus();

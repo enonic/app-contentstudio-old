@@ -120,17 +120,16 @@ export abstract class IssueDialog
         return this.publishProcessor.getDependantIds().length;
     }
 
-    open(opener?: ModalDialog) {
+    open() {
+        this.displayValidationErrors(false);
         super.open();
         this.form.giveFocus();
-
-        this.opener = opener;
+        this.opener = null;
     }
 
-    show() {
-        this.displayValidationErrors(false);
-
-        super.show();
+    openBy(opener?: ModalDialog) {
+        this.open();
+        this.opener = opener;
     }
 
     close() {

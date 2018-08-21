@@ -64,12 +64,8 @@ export class SortContentDialog extends api.ui.dialog.ModalDialog {
             this.contentGrid.getGrid().resizeCanvas();
             super.open();
             this.isOpen = true;
+            this.sortContentMenu.focus();
         }
-    }
-
-    show() {
-        super.show();
-        this.sortContentMenu.focus();
     }
 
     close() {

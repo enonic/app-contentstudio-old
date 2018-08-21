@@ -232,10 +232,6 @@ export class MoveContentDialog
             this.destinationSearchInput.clearCombobox();
         }
         super.open();
-    }
-
-    show() {
-        super.show();
         this.destinationSearchInput.giveFocus();
     }
 

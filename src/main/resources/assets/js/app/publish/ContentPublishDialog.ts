@@ -250,12 +250,12 @@ export class ContentPublishDialog
         let createIssueDialog = CreateIssueDialog.get();
 
         createIssueDialog.enableBackButton();
-        createIssueDialog.setItems(this.getItemList().getItems()/*idsToPublish, this.getItemList().getExcludeChildrenIds()*/);
+        createIssueDialog.setItems(this.getItemList().getItems());
         createIssueDialog.setExcludedIds(this.getExcludedIds());
         createIssueDialog.setExcludeChildrenIds(this.getItemList().getExcludeChildrenIds());
 
         createIssueDialog.lockPublishItems();
-        createIssueDialog.open(this);
+        createIssueDialog.openBy(this);
 
         this.addClass('masked');
     }

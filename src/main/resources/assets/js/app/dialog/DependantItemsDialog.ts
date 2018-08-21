@@ -177,9 +177,9 @@ export class DependantItemsDialog
         this.ignoreItemsChanged = value;
     }
 
-    show(hideLoadMask: boolean = false) {
+    open(hideLoadMask: boolean = false) {
         this.setDependantListVisible(this.showDependantList);
-        super.show();
+        super.open();
         if (!hideLoadMask) {
             this.appendChildToContentPanel(this.loadMask);
             this.loadMask.show();

@@ -90,17 +90,6 @@ export class IssueListDialog
         ]);
     }
 
-    show() {
-        api.dom.Body.get().appendChild(this);
-        super.show();
-        this.appendChildToContentPanel(this.loadMask);
-        if (!this.skipInitialLoad) {
-            this.reload();
-        } else {
-            this.updateTabAndFiltersLabels();
-        }
-    }
-
     close() {
         super.close();
         this.openIssuesPanel.resetFilters();
@@ -114,7 +103,16 @@ export class IssueListDialog
             this.skipInitialLoad = true;
         }
 
+        api.dom.Body.get().appendChild(this);
+
         super.open();
+
+        this.appendChildToContentPanel(this.loadMask);
+        if (!this.skipInitialLoad) {
+            this.reload();
+        } else {
+            this.updateTabAndFiltersLabels();
+        }
 
         this.skipInitialLoad = false;
         this.openIssuesPanel.resetFilters();

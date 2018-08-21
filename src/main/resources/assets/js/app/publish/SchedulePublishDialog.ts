@@ -32,11 +32,11 @@ export class SchedulePublishDialog
         this.createBackButton();
     }
 
-    show() {
+    open() {
         this.resetPublishDates();
         this.formView.displayValidationErrors(false);
         this.confirmScheduleAction.setEnabled(true);
-        super.show();
+        super.open();
     }
 
     close() {

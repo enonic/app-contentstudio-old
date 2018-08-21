@@ -1286,7 +1286,7 @@ export class ContentWizardPanel
                             .setYesCallback(() => this.doLayoutPersistedItem(persistedContent.clone()))
                             .setNoCallback(() => { /* empty */
                             })
-                            .show();
+                            .open();
                     }
                 }
 

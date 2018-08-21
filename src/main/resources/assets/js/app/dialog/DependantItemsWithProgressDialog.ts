@@ -45,8 +45,8 @@ export class DependantItemsWithProgressDialog
         this.progressManager.unProgressComplete(listener);
     }
 
-    show() {
-        super.show(this.isProgressBarEnabled());
+    open() {
+        super.open(this.isProgressBarEnabled());
     }
 
     isExecuting(): boolean {

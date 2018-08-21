@@ -40,8 +40,8 @@ export class ConfirmContentDeleteDialog
         this.addCancelButtonToBottom();
     }
 
-    show() {
-        super.show();
+    open() {
+        super.open();
         this.input.giveFocus();
     }
 

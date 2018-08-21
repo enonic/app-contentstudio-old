@@ -269,6 +269,10 @@ export class IssueDetailsDialog
 
     open() {
         super.open();
+
+        // load mask will only be shown if the request is necessary
+        this.loadMask.hide();
+
         if (this.isRendered()) {
             this.tabPanel.selectPanelByIndex(0);
         }
@@ -646,12 +650,6 @@ export class IssueDetailsDialog
 
     protected getDependantList(): PublishDialogDependantList {
         return <PublishDialogDependantList>super.getDependantList();
-    }
-
-    show() {
-        super.show();
-        // load mask will only be shown if the request is necessary
-        this.loadMask.hide();
     }
 
     close() {
