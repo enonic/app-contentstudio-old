@@ -1,5 +1,6 @@
 import '../../api.ts';
 import ContentSummaryAndCompareStatus = api.content.ContentSummaryAndCompareStatus;
+import Attribute = api.app.Attribute;
 
 export class DependantItemViewer extends api.ui.NamesAndIconViewer<ContentSummaryAndCompareStatus> {
 
@@ -31,6 +32,12 @@ export class DependantItemViewer extends api.ui.NamesAndIconViewer<ContentSummar
 
     resolveHint(object: ContentSummaryAndCompareStatus): string {
         return object.getPath().toString();
+    }
+
+    resolveMainNameData(object: ContentSummaryAndCompareStatus): Attribute {
+        const lang = object.getContentSummary().getLanguage();
+        const value = !lang ? '' : `(${lang})`;
+        return {name: 'locale', value};
     }
 
     protected getHintTargetEl(): api.dom.ElementHelper {
