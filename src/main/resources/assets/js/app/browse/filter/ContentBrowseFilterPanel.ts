@@ -70,6 +70,9 @@ export class ContentBrowseFilterPanel extends api.app.browse.filter.BrowseFilter
     }
 
     public setDependencyItem(item: ContentSummary, inbound: boolean) {
+        if (inbound !== this.dependenciesSection.getInbound()) {
+            this.dependenciesSection.reset();
+        }
         this.dependenciesSection.setInbound(inbound);
         this.setConstraintItems(this.dependenciesSection, [ContentSummaryAndCompareStatus.fromContentSummary(item)]);
     }
@@ -480,6 +483,10 @@ export class DependenciesSection extends api.app.browse.filter.ConstraintSection
 
     public isOutbound(): boolean {
         return this.isActive() && !this.inbound;
+    }
+
+    public getInbound(): boolean {
+        return this.inbound;
     }
 
     public setInbound(inbound: boolean) {
