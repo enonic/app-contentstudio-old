@@ -410,7 +410,7 @@ export class TextComponentViewCK
             .setMouseLeaveHandler(this.onMouseLeftHandler.bind(this))
             .setKeydownHandler(keydownHandler)
             .setNodeChangeHandler(this.processEditorValue.bind(this))
-            .setFixedToolbarContainer(this.getPageView().getEditorToolbarContainerId())
+            .setFixedToolbarContainer(PageViewController.get().getEditorToolbarContainerId())
             .setContent(this.getContent())
             .setEditableSourceCode(this.editableSourceCode)
             .setContentPath(this.getContentPath())
