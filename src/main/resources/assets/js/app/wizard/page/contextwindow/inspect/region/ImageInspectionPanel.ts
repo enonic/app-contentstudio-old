@@ -129,12 +129,21 @@ export class ImageInspectionPanel
         let configForm = imageComponent.getForm();
         this.formView = new api.form.FormView(this.formContext, configForm, configData.getRoot());
         this.appendChild(this.formView);
+        this.toggleFormViewVisibility();
         imageComponent.setDisableEventForwarding(true);
         this.formView.layout().catch((reason: any) => {
             api.DefaultErrorHandler.handle(reason);
         }).finally(() => {
             imageComponent.setDisableEventForwarding(false);
         }).done();
+    }
+
+    private toggleFormViewVisibility() {
+        if (this.imageComponent.hasImage()) {
+            this.formView.show();
+        } else {
+            this.formView.hide();
+        }
     }
 
     private initSelectorListeners() {
