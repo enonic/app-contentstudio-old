@@ -16,6 +16,7 @@ app {
 }
 
 dependencies {
+    compile "${group}:web-api:${xpVersion}"
     compile "${group}:portal-api:${xpVersion}"
     include "${group}:lib-admin:${xpVersion}"
     include "${group}:lib-mustache:${xpVersion}"
