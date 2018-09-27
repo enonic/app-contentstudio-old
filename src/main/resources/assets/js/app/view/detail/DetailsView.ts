@@ -69,12 +69,28 @@ export class DetailsView extends api.dom.DivEl {
     }
 
     private subscribeOnEvents() {
+        const serverEventsHandler = api.content.event.ContentServerEventsHandler.getInstance();
+
         ActiveContentVersionSetEvent.on((event: ActiveContentVersionSetEvent) => {
             if (ActiveDetailsPanelManager.getActiveDetailsPanel().isVisibleOrAboutToBeVisible() && !!this.activeWidget &&
                 this.activeWidget.getWidgetName() === i18n('field.widget.versionHistory')) {
                 this.updateActiveWidget();
             }
         });
+
+        const dependenciesWidgetUpdateHandler = AppHelper.debounce(this.updateDependenciesWidget.bind(this), 1000);
+
+        serverEventsHandler.onContentDuplicated(dependenciesWidgetUpdateHandler);
+        serverEventsHandler.onContentUpdated(dependenciesWidgetUpdateHandler);
+        serverEventsHandler.onContentDeleted(dependenciesWidgetUpdateHandler);
+    }
+
+    private updateDependenciesWidget() {
+        if (!this.activeWidget || !this.activeWidget.hasClass('dependency-widget')) {
+            return;
+        }
+
+        this.activeWidget.updateWidgetItemViews(true);
     }
 
     private initDivForNoSelection() {
