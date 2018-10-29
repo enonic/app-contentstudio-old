@@ -7,10 +7,13 @@ import {ResolveDependencyResult} from '../../../../resource/ResolveDependencyRes
 import {ResolveDependenciesResult} from '../../../../resource/ResolveDependenciesResult';
 import {ShowDependenciesEvent} from '../../../../browse/ShowDependenciesEvent';
 import {ContentSummaryAndCompareStatus} from '../../../../content/ContentSummaryAndCompareStatus';
+import {EditContentEvent} from '../../../../event/EditContentEvent';
 import ActionButton = api.ui.button.ActionButton;
 import Action = api.ui.Action;
+import NamesAndIconView = api.app.NamesAndIconView;
 import NamesAndIconViewSize = api.app.NamesAndIconViewSize;
 import NamesAndIconViewBuilder = api.app.NamesAndIconViewBuilder;
+import Tooltip = api.ui.Tooltip;
 import i18n = api.util.i18n;
 
 export class DependenciesWidgetItemView
@@ -58,8 +61,8 @@ export class DependenciesWidgetItemView
     }
 
     private appendButton(label: string, cls: string): ActionButton {
-        let action = new Action(label);
-        let button = new ActionButton(action);
+        const action = new Action(label);
+        const button = new ActionButton(action);
 
         button.addClass(cls);
         this.appendChild(button);
@@ -101,8 +104,9 @@ export class DependenciesWidgetItemView
     }
 
     private createDependenciesContainer(type: DependencyType, dependencies: DependencyGroup[]): api.dom.DivEl {
-        let typeAsString = DependencyType[type].toLowerCase();
-        let div = new api.dom.DivEl('dependencies-container ' + typeAsString);
+        const typeAsString = DependencyType[type].toLowerCase();
+        const div = new api.dom.DivEl('dependencies-container ' + typeAsString);
+
         if (dependencies.length === 0) {
             this.addClass('no-' + typeAsString);
             div.addClass('no-dependencies');
@@ -138,16 +142,38 @@ export class DependenciesWidgetItemView
 
     private appendDependencies(container: api.dom.DivEl, dependencies: DependencyGroup[]) {
         dependencies.forEach((dependencyGroup: DependencyGroup) => {
-            let dependencyGroupView = new api.app.NamesAndIconView(new NamesAndIconViewBuilder().setSize(NamesAndIconViewSize.small))
-                .setIconUrl(dependencyGroup.getIconUrl())
-                .setMainName('(' + dependencyGroup.getItemCount().toString() + ')');
-
-            /* Tooltip is buggy
-            dependencyGroupView.getEl().setTitle(dependencyGroup.getName());
-            */
-
-            container.appendChild(dependencyGroupView);
+            container.appendChild(this.createDependencyGroupView(dependencyGroup));
         });
+    }
+
+    private createDependencyGroupView(dependencyGroup: DependencyGroup): NamesAndIconView {
+        const dependencyGroupView = new NamesAndIconView(new NamesAndIconViewBuilder().setSize(NamesAndIconViewSize.small))
+            .setIconUrl(dependencyGroup.getIconUrl())
+            .setMainName('(' + dependencyGroup.getItemCount().toString() + ')');
+
+        this.handleDependencyGroupClick(dependencyGroupView, dependencyGroup);
+        this.createDependencyGroupTooltip(dependencyGroupView, dependencyGroup);
+
+        return dependencyGroupView;
+    }
+
+    private handleDependencyGroupClick(dependencyGroupView: NamesAndIconView, dependencyGroup: DependencyGroup) {
+        dependencyGroupView.getIconImageEl().onClicked(() => {
+            if (dependencyGroup.getDependencies().length > 1) {
+                api.notify.showWarning(i18n('notify.edit.tooMuch'));
+            } else {
+                const contents: ContentSummaryAndCompareStatus[] =
+                    dependencyGroup.getDependencies().map(ContentSummaryAndCompareStatus.fromContentAndCompareStatus);
+
+                new EditContentEvent(contents).fire();
+            }
+        });
+    }
+
+    private createDependencyGroupTooltip(dependencyGroupView: NamesAndIconView, dependencyGroup: DependencyGroup) {
+        let tooltipText: string = '';
+        dependencyGroup.getDependencies().forEach(value => tooltipText += value.getPath() + '\n');
+        new Tooltip(dependencyGroupView.getIconImageEl(), tooltipText, 200).setMode(Tooltip.MODE_GLOBAL_STATIC).setSide(Tooltip.SIDE_LEFT);
     }
 
     /**
@@ -155,7 +181,7 @@ export class DependenciesWidgetItemView
      */
     private resolveDependencies(item: ContentSummaryAndCompareStatus): wemQ.Promise<any> {
 
-        let resolveDependenciesRequest = new ResolveDependenciesRequest([item.getContentId()]);
+        const resolveDependenciesRequest = new ResolveDependenciesRequest([item.getContentId()]);
 
         return resolveDependenciesRequest.sendAndParse().then((result: ResolveDependenciesResult) => {
             const dependencyEntry: ResolveDependencyResult = result.getDependencies()[0];

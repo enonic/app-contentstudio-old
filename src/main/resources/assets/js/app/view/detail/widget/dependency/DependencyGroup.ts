@@ -1,6 +1,7 @@
 import '../../../../../api.ts';
 import {ContentDependencyGroupJson} from '../../../../resource/json/ContentDependencyGroupJson';
 import ContentTypeName = api.schema.content.ContentTypeName;
+import ContentSummary = api.content.ContentSummary;
 
 export enum DependencyType {
     INBOUND,
@@ -9,23 +10,23 @@ export enum DependencyType {
 
 export class DependencyGroup implements api.Equitable {
 
-    private itemCount: number;
-
     private iconUrl: string;
 
     private contentType: ContentTypeName;
 
     private type: DependencyType;
 
+    private dependencies: ContentSummary[];
+
     constructor(builder: DependencyGroupBuilder) {
-        this.itemCount = builder.itemCount;
         this.iconUrl = builder.iconUrl;
         this.contentType = builder.contentType;
         this.type = builder.type;
+        this.dependencies = builder.dependencies;
     }
 
     getItemCount(): number {
-        return this.itemCount;
+        return this.dependencies.length;
     }
 
     getIconUrl(): string {
@@ -44,6 +45,10 @@ export class DependencyGroup implements api.Equitable {
         return DependencyType[this.type];
     }
 
+    getDependencies(): ContentSummary[] {
+        return this.dependencies;
+    }
+
     equals(o: api.Equitable): boolean {
 
         if (!api.ObjectHelper.iFrameSafeInstanceOf(o, DependencyGroup)) {
@@ -52,7 +57,7 @@ export class DependencyGroup implements api.Equitable {
 
         let other = <DependencyGroup>o;
 
-        if (!api.ObjectHelper.numberEquals(this.itemCount, other.itemCount)) {
+        if (!api.ObjectHelper.numberEquals(this.dependencies.length, other.dependencies.length)) {
             return false;
         }
         if (!api.ObjectHelper.equals(this.contentType, other.contentType)) {
@@ -77,26 +82,26 @@ export class DependencyGroup implements api.Equitable {
 
 export class DependencyGroupBuilder {
 
-    itemCount: number;
-
     iconUrl: string;
 
     contentType: api.schema.content.ContentTypeName;
 
     type: DependencyType;
 
+    dependencies: ContentSummary[];
+
     constructor(source?: DependencyGroup) {
         if (source) {
-            this.itemCount = source.getItemCount();
             this.iconUrl = source.getIconUrl();
             this.contentType = source.getContentType();
+            this.dependencies = source.getDependencies();
         }
     }
 
     fromJson(json: ContentDependencyGroupJson): DependencyGroupBuilder {
-        this.itemCount = json.count;
         this.iconUrl = json.iconUrl;
         this.contentType = new ContentTypeName(json.type);
+        this.dependencies = json.contents.map(contentSummaryJson => ContentSummary.fromJson(contentSummaryJson));
 
         return this;
     }
