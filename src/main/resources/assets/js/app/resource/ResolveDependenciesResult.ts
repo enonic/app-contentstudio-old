@@ -19,8 +19,9 @@ export class ResolveDependenciesResult {
         this.dependencies.forEach(dependencyResult => {
             const dependency = dependencyResult.getDependency();
             const contentId = dependencyResult.getContentId().toString();
+
             if (dependency.inbound && dependency.inbound.length > 0) {
-                object[contentId] = dependency.inbound.reduce((sum, dep) => sum + dep.count, 0);
+                object[contentId] = dependency.inbound.reduce((sum, dep) => sum + dep.contents.length, 0);
             }
         });
 

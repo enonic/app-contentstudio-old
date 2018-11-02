@@ -1,8 +1,8 @@
 export interface ContentDependencyGroupJson {
 
-    count: number;
-
     iconUrl: string;
 
     type: string;
+
+    contents: api.content.json.ContentSummaryJson[];
 }
