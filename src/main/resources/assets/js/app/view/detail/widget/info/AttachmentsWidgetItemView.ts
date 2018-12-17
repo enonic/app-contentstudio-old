@@ -1,9 +1,9 @@
 import {WidgetItemView} from '../../WidgetItemView';
 import {GetContentAttachmentsRequest} from '../../../../resource/GetContentAttachmentsRequest';
-import {ContentSummaryAndCompareStatus} from '../../../../content/ContentSummaryAndCompareStatus';
 import {Attachments} from '../../../../attachment/Attachments';
 import {Attachment} from '../../../../attachment/Attachment';
 import {AttachmentName} from '../../../../attachment/AttachmentName';
+import {Content} from '../../../../content/Content';
 import ContentSummary = api.content.ContentSummary;
 import ContentId = api.content.ContentId;
 import i18n = api.util.i18n;
@@ -22,8 +22,7 @@ export class AttachmentsWidgetItemView extends WidgetItemView {
         super('attachments-widget-item-view');
     }
 
-    public setContentAndUpdateView(item: ContentSummaryAndCompareStatus): wemQ.Promise<any> {
-        let content = item.getContentSummary();
+    public setContentAndUpdateView(content: Content): wemQ.Promise<any> {
         if (AttachmentsWidgetItemView.debug) {
             console.debug('AttachmentsWidgetItemView.setContent: ', content);
         }

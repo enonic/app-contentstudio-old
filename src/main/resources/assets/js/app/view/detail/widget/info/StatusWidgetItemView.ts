@@ -2,8 +2,11 @@ import {WidgetItemView} from '../../WidgetItemView';
 import {ContentSummaryAndCompareStatus} from '../../../../content/ContentSummaryAndCompareStatus';
 import {CompareStatus} from '../../../../content/CompareStatus';
 import {PublishStatus} from '../../../../publish/PublishStatus';
+import {Content} from '../../../../content/Content';
+import {ContentSummaryAndCompareStatusFetcher} from '../../../../resource/ContentSummaryAndCompareStatusFetcher';
 
-export class StatusWidgetItemView extends WidgetItemView {
+export class StatusWidgetItemView
+    extends WidgetItemView {
 
     private content: ContentSummaryAndCompareStatus;
 
@@ -13,30 +16,34 @@ export class StatusWidgetItemView extends WidgetItemView {
         super('status-widget-item-view');
     }
 
-    public setContentAndUpdateView(item: ContentSummaryAndCompareStatus): wemQ.Promise<any> {
-        let compareStatus = item.getCompareStatus();
-        let publishStatus = item.getPublishStatus();
-        if (StatusWidgetItemView.debug) {
-            console.debug('StatusWidgetItemView.setCompareStatus: ', compareStatus);
-            console.debug('StatusWidgetItemView.setPublishStatus: ', publishStatus);
-        }
-        const timePublished = content =>
-            content && content.getContentSummary() && content.getContentSummary().getPublishFirstTime() || 0;
-        const statusChanged = publishStatus !== this.getPublishStatus() ||
-                              compareStatus !== this.getCompareStatus() ||
-                              (compareStatus === CompareStatus.NEW && timePublished(item) !== timePublished(this.content));
-        if (statusChanged) {
-            this.content = item;
-            return this.layout();
-        }
-        return wemQ<any>(null);
+    public setContentAndUpdateView(item: Content): wemQ.Promise<any> {
+        return ContentSummaryAndCompareStatusFetcher.fetch(item.getContentId()).then(contentSummaryAndCompareStatus => {
+            let compareStatus = contentSummaryAndCompareStatus.getCompareStatus();
+            let publishStatus = contentSummaryAndCompareStatus.getPublishStatus();
+            if (StatusWidgetItemView.debug) {
+                console.debug('StatusWidgetItemView.setCompareStatus: ', compareStatus);
+                console.debug('StatusWidgetItemView.setPublishStatus: ', publishStatus);
+            }
+            const timePublished = content =>
+                content && content.getContentSummary() && content.getContentSummary().getPublishFirstTime() || 0;
+            const statusChanged = publishStatus !== this.getPublishStatus() ||
+                                  compareStatus !== this.getCompareStatus() ||
+                                  (compareStatus === CompareStatus.NEW && timePublished(contentSummaryAndCompareStatus) !==
+                                   timePublished(this.content));
+            if (statusChanged) {
+                this.content = contentSummaryAndCompareStatus;
+                return this.layout();
+            }
+            return wemQ<any>(null);
+        });
+
     }
 
-    private getCompareStatus() : CompareStatus {
+    private getCompareStatus(): CompareStatus {
         return this.content ? this.content.getCompareStatus() : null;
     }
 
-    private getPublishStatus() : PublishStatus {
+    private getPublishStatus(): PublishStatus {
         return this.content ? this.content.getPublishStatus() : null;
     }
 

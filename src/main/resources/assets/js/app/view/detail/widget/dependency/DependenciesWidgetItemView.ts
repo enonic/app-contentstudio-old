@@ -6,7 +6,7 @@ import {ContentDependencyJson} from '../../../../resource/json/ContentDependency
 import {ResolveDependencyResult} from '../../../../resource/ResolveDependencyResult';
 import {ResolveDependenciesResult} from '../../../../resource/ResolveDependenciesResult';
 import {ShowDependenciesEvent} from '../../../../browse/ShowDependenciesEvent';
-import {ContentSummaryAndCompareStatus} from '../../../../content/ContentSummaryAndCompareStatus';
+import {Content} from '../../../../content/Content';
 import ActionButton = api.ui.button.ActionButton;
 import Action = api.ui.Action;
 import NamesAndIconView = api.app.NamesAndIconView;
@@ -23,7 +23,7 @@ export class DependenciesWidgetItemView
     private noInboundDependencies: api.dom.DivEl;
     private noOutboundDependencies: api.dom.DivEl;
 
-    private item: ContentSummaryAndCompareStatus;
+    private item: Content;
     private inboundDependencies: DependencyGroup[];
     private outboundDependencies: DependencyGroup[];
 
@@ -68,7 +68,7 @@ export class DependenciesWidgetItemView
         return button;
     }
 
-    public setContentAndUpdateView(item: ContentSummaryAndCompareStatus): wemQ.Promise<any> {
+    public setContentAndUpdateView(item: Content): wemQ.Promise<any> {
         if (DependenciesWidgetItemView.debug) {
             console.debug('DependenciesWidgetItemView.setItem: ', item);
         }
@@ -89,7 +89,7 @@ export class DependenciesWidgetItemView
         this.appendChild(this.mainContainer);
     }
 
-    private appendContentNamesAndIcon(item: ContentSummaryAndCompareStatus) {
+    private appendContentNamesAndIcon(item: Content) {
         this.nameAndIcon =
             new api.app.NamesAndIconView(new NamesAndIconViewBuilder().setSize(NamesAndIconViewSize.medium))
                 .setIconUrl(item.getIconUrl())
@@ -118,7 +118,7 @@ export class DependenciesWidgetItemView
         return div;
     }
 
-    private renderContent(item: ContentSummaryAndCompareStatus) {
+    private renderContent(item: Content) {
         this.resetContainers();
 
         this.noInboundDependencies = this.createDependenciesContainer(DependencyType.INBOUND, this.inboundDependencies);
@@ -164,7 +164,7 @@ export class DependenciesWidgetItemView
     /**
      * Perform request to resolve dependency items of given item.
      */
-    private resolveDependencies(item: ContentSummaryAndCompareStatus): wemQ.Promise<any> {
+    private resolveDependencies(item: Content): wemQ.Promise<any> {
 
         const resolveDependenciesRequest = new ResolveDependenciesRequest([item.getContentId()]);
 

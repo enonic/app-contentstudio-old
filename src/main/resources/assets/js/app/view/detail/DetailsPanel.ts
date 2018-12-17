@@ -1,6 +1,7 @@
 import {DetailsView} from './DetailsView';
 import {WidgetView} from './WidgetView';
 import {ContentSummaryAndCompareStatus} from '../../content/ContentSummaryAndCompareStatus';
+import {Content} from '../../content/Content';
 
 export class DetailsPanel extends api.ui.panel.Panel {
 
@@ -38,7 +39,7 @@ export class DetailsPanel extends api.ui.panel.Panel {
         return this.detailsView.getActiveWidget();
     }
 
-    getItem(): ContentSummaryAndCompareStatus {
+    getItem(): Content {
         return this.detailsView.getItem();
     }
 

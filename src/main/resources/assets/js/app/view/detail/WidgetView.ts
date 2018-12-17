@@ -1,8 +1,8 @@
 import {DetailsView} from './DetailsView';
 import {WidgetItemView} from './WidgetItemView';
 import {UriHelper} from '../../rendering/UriHelper';
-import {ContentSummaryAndCompareStatus} from '../../content/ContentSummaryAndCompareStatus';
 import {ActiveDetailsPanelManager} from './ActiveDetailsPanelManager';
+import {Content} from '../../content/Content';
 import Widget = api.content.Widget;
 
 export class WidgetView extends api.dom.DivEl {
@@ -19,7 +19,7 @@ export class WidgetView extends api.dom.DivEl {
 
     private url: string = '';
 
-    private content: ContentSummaryAndCompareStatus;
+    private content: Content;
 
     private activationListeners: {() : void}[] = [];
 

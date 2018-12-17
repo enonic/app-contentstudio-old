@@ -37,8 +37,7 @@ export class PageTemplateWidgetItemView
         super('page-template-widget-item-view');
     }
 
-    public setContentAndUpdateView(item: ContentSummaryAndCompareStatus): wemQ.Promise<any> {
-        let content = item.getContentSummary();
+    public setContentAndUpdateView(content: Content): wemQ.Promise<any> {
         if (!content.equals(this.content)) {
             if (!this.content) {
                 this.initListeners();
@@ -60,9 +59,7 @@ export class PageTemplateWidgetItemView
                 return thisContentId === content.getId();
             })[0];
 
-            if (contentSummary) {
-                this.setContentAndUpdateView(contentSummary);
-            } else if (contents.some(content => content.getContentSummary().isPageTemplate())) {
+            if (!contentSummary && contents.some(content => content.getContentSummary().isPageTemplate())) {
                 this.loadPageTemplate().then(() => this.layout());
             }
 

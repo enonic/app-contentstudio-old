@@ -130,12 +130,31 @@ export class DetailsSplitPanel
         return this.options.noPreview ? this.mobileDetailsPanel : this.mobileContentItemStatisticsPanel.getDetailsPanel();
     }
 
-    private getMobilePanelItem(): ContentSummaryAndCompareStatus {
+    setContent(content: ContentSummaryAndCompareStatus) {
+        if (!this.isMobileMode()) {
+            this.detailsView.setItem(content);
+        }
         if (this.options.noPreview) {
-            return this.mobileDetailsPanel.getItem();
+            this.mobileDetailsPanel.setItem(content);
         } else {
-            const item = this.mobileContentItemStatisticsPanel.getItem();
-            return item && item.getModel() || null;
+            const prevItemId = this.getMobilePanelItemId();
+            const changed = !prevItemId || !prevItemId.equals(content.getContentId());
+
+            const item = ContentHelper.createView(content);
+            this.mobileContentItemStatisticsPanel.setItem(item);
+
+            if (changed) {
+                const previewPanel = this.mobileContentItemStatisticsPanel.getPreviewPanel();
+                previewPanel.setBlank();
+                previewPanel.showMask();
+
+                setTimeout(() => {
+                    new IsRenderableRequest(content.getContentId()).sendAndParse().then((renderable: boolean) => {
+                        item.setRenderable(renderable);
+                        this.setMobilePreviewItem(item);
+                    });
+                }, 300);
+            }
         }
     }
 
@@ -205,31 +224,12 @@ export class DetailsSplitPanel
         }
     }
 
-    setContent(content: ContentSummaryAndCompareStatus) {
-        if (!this.isMobileMode()) {
-            this.detailsView.setItem(content);
-        }
+    private getMobilePanelItemId(): api.content.ContentId {
         if (this.options.noPreview) {
-            this.mobileDetailsPanel.setItem(content);
+            return this.mobileDetailsPanel.getItem().getContentId();
         } else {
-            const prevItem = this.getMobilePanelItem();
-            const changed = !prevItem || prevItem.getId() !== content.getId();
-
-            const item = ContentHelper.createView(content);
-            this.mobileContentItemStatisticsPanel.setItem(item);
-
-            if (changed) {
-                const previewPanel = this.mobileContentItemStatisticsPanel.getPreviewPanel();
-                previewPanel.setBlank();
-                previewPanel.showMask();
-
-                setTimeout(() => {
-                    new IsRenderableRequest(content.getContentId()).sendAndParse().then((renderable: boolean) => {
-                        item.setRenderable(renderable);
-                        this.setMobilePreviewItem(item);
-                    });
-                }, 300);
-            }
+            const item = this.mobileContentItemStatisticsPanel.getItem();
+            return item && item.getModel().getContentId() || null;
         }
     }
 

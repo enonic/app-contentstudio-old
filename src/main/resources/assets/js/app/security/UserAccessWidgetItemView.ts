@@ -1,7 +1,6 @@
 import {UserAccessListItemView} from './UserAccessListItemView';
 import {WidgetItemView} from '../view/detail/WidgetItemView';
 import {UserAccessListView} from './UserAccessListView';
-import {ContentSummaryAndCompareStatus} from '../content/ContentSummaryAndCompareStatus';
 import {Content} from '../content/Content';
 import {AccessControlEntryView} from '../view/AccessControlEntryView';
 import {OpenEditPermissionsDialogEvent} from '../event/OpenEditPermissionsDialogEvent';
@@ -10,14 +9,13 @@ import {GetContentByIdRequest} from '../resource/GetContentByIdRequest';
 import {Access} from './Access';
 import {EffectivePermission} from './EffectivePermission';
 import {Permission} from '../access/Permission';
-import ContentId = api.content.ContentId;
 import LoginResult = api.security.auth.LoginResult;
 import i18n = api.util.i18n;
 
 export class UserAccessWidgetItemView
     extends WidgetItemView {
 
-    private contentId: ContentId;
+    private content: Content;
 
     private accessListView: UserAccessListView;
 
@@ -44,12 +42,11 @@ export class UserAccessWidgetItemView
         this.accessListView = new UserAccessListView();
     }
 
-    public setContentAndUpdateView(item: ContentSummaryAndCompareStatus): wemQ.Promise<any> {
-        let contentId = item.getContentId();
+    public setContentAndUpdateView(item: Content): wemQ.Promise<any> {
         if (UserAccessWidgetItemView.debug) {
-            console.debug('UserAccessWidgetItemView.setContentId: ', contentId);
+            console.debug('UserAccessWidgetItemView.setContent: ', item);
         }
-        this.contentId = contentId;
+        this.content = item;
         return this.layout();
     }
 
@@ -138,8 +135,8 @@ export class UserAccessWidgetItemView
         return new api.security.auth.IsAuthenticatedRequest().sendAndParse().then((loginResult) => {
 
             this.loginResult = loginResult;
-            if (this.contentId) {
-                return new GetContentByIdRequest(this.contentId).sendAndParse().then((content: Content) => {
+            if (this.content) {
+                return new GetContentByIdRequest(this.content.getContentId()).sendAndParse().then((content: Content) => {
                     if (content) {
                         this.layoutHeader(content);
                         return this.layoutList(content).then(() => {

@@ -1,5 +1,5 @@
 import LinkEl = api.dom.LinkEl;
-import {ContentSummaryAndCompareStatus} from '../../content/ContentSummaryAndCompareStatus';
+import {Content} from '../../content/Content';
 
 export class WidgetItemView extends api.dom.DivEl {
 
@@ -16,7 +16,7 @@ export class WidgetItemView extends api.dom.DivEl {
         return wemQ<any>(null);
     }
 
-    public setContentAndUpdateView(item: ContentSummaryAndCompareStatus): wemQ.Promise<any> {
+    public setContentAndUpdateView(item: Content): wemQ.Promise<any> {
         return wemQ<any>(null);
     }
 

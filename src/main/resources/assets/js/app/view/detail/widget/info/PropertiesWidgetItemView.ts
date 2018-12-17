@@ -1,6 +1,5 @@
 import {WidgetItemView} from '../../WidgetItemView';
-import {ContentServerEventsHandler} from '../../../../event/ContentServerEventsHandler';
-import {ContentSummaryAndCompareStatus} from '../../../../content/ContentSummaryAndCompareStatus';
+import {Content} from '../../../../content/Content';
 import ContentSummary = api.content.ContentSummary;
 import DateTimeFormatter = api.ui.treegrid.DateTimeFormatter;
 import Application = api.application.Application;
@@ -18,39 +17,13 @@ export class PropertiesWidgetItemView extends WidgetItemView {
         super('properties-widget-item-view');
     }
 
-    public setContentAndUpdateView(item: ContentSummaryAndCompareStatus): wemQ.Promise<any> {
-        let content = item.getContentSummary();
+    public setContentAndUpdateView(content: Content): wemQ.Promise<any> {
         if (!content.equals(this.content)) {
-            if (!this.content) {
-                this.initListeners();
-            }
             this.content = content;
             return this.layout();
         }
 
         return wemQ<any>(null);
-    }
-
-    private initListeners() {
-
-        let layoutOnPublishStateChange = (contents: ContentSummaryAndCompareStatus[]) => {
-            let thisContentId = this.content.getId();
-
-            let contentSummary: ContentSummaryAndCompareStatus = contents.filter((content) => {
-                return thisContentId === content.getId();
-            })[0];
-
-            if (contentSummary) {
-                this.setContentAndUpdateView(contentSummary);
-            }
-        };
-
-        let serverEvents = ContentServerEventsHandler.getInstance();
-
-        serverEvents.onContentPublished(layoutOnPublishStateChange);
-
-        //Uncomment the line below if we need to redo the layout on unpublish
-        //serverEvents.onContentUnpublished(layoutOnPublishStateChange);
     }
 
     public layout(): wemQ.Promise<any> {

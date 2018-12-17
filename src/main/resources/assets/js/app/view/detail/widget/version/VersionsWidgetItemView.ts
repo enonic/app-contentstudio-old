@@ -2,6 +2,8 @@ import {WidgetItemView} from '../../WidgetItemView';
 import {VersionsView} from './VersionsView';
 import {ContentServerEventsHandler} from '../../../../event/ContentServerEventsHandler';
 import {ContentSummaryAndCompareStatus} from '../../../../content/ContentSummaryAndCompareStatus';
+import {Content} from '../../../../content/Content';
+import {ContentSummaryAndCompareStatusFetcher} from '../../../../resource/ContentSummaryAndCompareStatusFetcher';
 
 export class VersionsWidgetItemView extends WidgetItemView {
 
@@ -35,14 +37,17 @@ export class VersionsWidgetItemView extends WidgetItemView {
         });
     }
 
-    public setContentAndUpdateView(item: ContentSummaryAndCompareStatus): wemQ.Promise<any> {
+    public setContentAndUpdateView(item: Content): wemQ.Promise<any> {
         if (VersionsWidgetItemView.debug) {
             console.debug('VersionsWidgetItemView.setItem: ', item);
         }
 
         if (this.versionsView) {
-            this.versionsView.setContentData(item);
-            return this.reloadActivePanel();
+            return ContentSummaryAndCompareStatusFetcher.fetch(item.getContentId()).then(contentSummaryAndCompareStatus => {
+                this.versionsView.setContentData(contentSummaryAndCompareStatus);
+                return this.reloadActivePanel();
+            });
+
         }
         return wemQ<any>(null);
     }

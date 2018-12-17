@@ -11,6 +11,8 @@ import {ActiveContentVersionSetEvent} from '../../event/ActiveContentVersionSetE
 import {GetWidgetsByInterfaceRequest} from '../../resource/GetWidgetsByInterfaceRequest';
 import {ContentSummaryAndCompareStatus} from '../../content/ContentSummaryAndCompareStatus';
 import {UserAccessWidgetItemView} from '../../security/UserAccessWidgetItemView';
+import {Content} from '../../content/Content';
+import {GetContentByIdRequest} from '../../resource/GetContentByIdRequest';
 import Widget = api.content.Widget;
 import ContentSummaryViewer = api.content.ContentSummaryViewer;
 import ApplicationEvent = api.application.ApplicationEvent;
@@ -18,7 +20,8 @@ import ApplicationEventType = api.application.ApplicationEventType;
 import AppHelper = api.util.AppHelper;
 import i18n = api.util.i18n;
 
-export class DetailsView extends api.dom.DivEl {
+export class DetailsView
+    extends api.dom.DivEl {
 
     private widgetViews: WidgetView[] = [];
     private viewer: ContentSummaryViewer;
@@ -28,16 +31,16 @@ export class DetailsView extends api.dom.DivEl {
     private loadMask: api.ui.mask.LoadMask;
     private divForNoSelection: api.dom.DivEl;
 
-    private item: ContentSummaryAndCompareStatus;
+    private item: Content;
 
     private activeWidget: WidgetView;
     private defaultWidgetView: WidgetView;
 
     private alreadyFetchedCustomWidgets: boolean;
 
-    private sizeChangedListeners: {(): void}[] = [];
+    private sizeChangedListeners: { (): void }[] = [];
 
-    private widgetsUpdateList: {[key: string]: (key: string, type: ApplicationEventType) => void } = {};
+    private widgetsUpdateList: { [key: string]: (key: string, type: ApplicationEventType) => void } = {};
 
     public static debug: boolean = false;
 
@@ -97,60 +100,32 @@ export class DetailsView extends api.dom.DivEl {
         });
     }
 
-    private handleWidgetsUpdate(event: ApplicationEvent) {
-        const isWidgetUpdated = [
-            ApplicationEventType.INSTALLED,
-            ApplicationEventType.UNINSTALLED,
-            ApplicationEventType.STARTED,
-            ApplicationEventType.STOPPED,
-            ApplicationEventType.UPDATED
-        ].indexOf(event.getEventType()) > -1;
-
-        if (isWidgetUpdated) {
-            const key = event.getApplicationKey().getName();
-
-            if (!this.widgetsUpdateList[key]) {
-                this.widgetsUpdateList[key] = AppHelper.debounce((k, type) => this.handleWidgetUpdate(k, type), 1000);
-            }
-            this.widgetsUpdateList[key](key, event.getEventType());
+    public setItem(item: ContentSummaryAndCompareStatus): wemQ.Promise<any> {
+        if (DetailsView.debug) {
+            console.debug('DetailsView.setItem: ', item);
         }
+
+        if (!api.ObjectHelper.equals(item, this.item)) {
+            if (item) {
+                return new GetContentByIdRequest(item.getContentId()).sendAndParse().then(content => {
+                    this.item = content;
+
+                    this.layout(false);
+                    if (ActiveDetailsPanelManager.getActiveDetailsPanel().isVisibleOrAboutToBeVisible() && !!this.activeWidget) {
+                        return this.updateActiveWidget();
+                    }
+                    return wemQ(null);
+                });
+
+            } else {
+                this.layout();
+            }
+        }
+        return wemQ(null);
     }
 
-    private handleWidgetUpdate(key: string, type: ApplicationEventType) {
-        let widgetView = this.getWidgetByKey(key);
-        const isActive = widgetView && this.activeWidget.getWidgetName() === widgetView.getWidgetName();
-
-        const isRemoved = [
-            ApplicationEventType.UNINSTALLED,
-            ApplicationEventType.STOPPED
-        ].indexOf(type) > -1;
-
-        const isUpdated = !!widgetView;
-
-        const updateView = (useDefault?: boolean) => {
-            this.widgetsSelectionRow.updateWidgetsDropdown(this.widgetViews);
-            if (useDefault) {
-                this.activateDefaultWidget();
-            } else {
-                this.activeWidget.setActive();
-            }
-            this.widgetsSelectionRow.updateState(this.activeWidget);
-        };
-
-        if (isRemoved) {
-            this.removeWidgetByKey(key);
-
-            updateView(isActive);
-
-            return;
-        }
-
-        this.fetchWidgetByKey(key).then((widget: Widget) => {
-            widgetView = WidgetView.create().setName(widget.getDisplayName()).setDetailsView(this).setWidget(widget).build();
-            isUpdated ? this.updateWidget(widgetView) : this.addWidget(widgetView);
-
-            updateView();
-        });
+    getItem(): Content {
+        return this.item;
     }
 
     getCustomWidgetViewsAndUpdateDropdown(): wemQ.Promise<void> {
@@ -202,27 +177,14 @@ export class DetailsView extends api.dom.DivEl {
         this.detailsContainer.insertChild(this.viewer, 0);
     }
 
-    public setItem(item: ContentSummaryAndCompareStatus): wemQ.Promise<any> {
-        if (DetailsView.debug) {
-            console.debug('DetailsView.setItem: ', item);
+    updateViewer() {
+        if (this.item) {
+            this.viewer.setObject(this.item);
         }
-
-        if (!api.ObjectHelper.equals(item, this.item)) {
-            this.item = item;
-            if (item) {
-                this.layout(false);
-                if (ActiveDetailsPanelManager.getActiveDetailsPanel().isVisibleOrAboutToBeVisible() && !!this.activeWidget) {
-                    return this.updateActiveWidget();
-                }
-            } else {
-                this.layout();
-            }
-        }
-        return wemQ<any>(null);
     }
 
-    getItem(): ContentSummaryAndCompareStatus {
-        return this.item;
+    notifyPanelSizeChanged() {
+        this.sizeChangedListeners.forEach((listener: () => void) => listener());
     }
 
     private getWidgetsInterfaceNames(): string[] {
@@ -300,19 +262,23 @@ export class DetailsView extends api.dom.DivEl {
         });
     }
 
-    private fetchWidgetByKey(key: string): wemQ.Promise<Widget>  {
-        return this.fetchCustomWidgetViews().then((widgets: Widget[]) => {
-            for (let i = 0; i < widgets.length; i++) {
-                if (widgets[i].getWidgetDescriptorKey().getApplicationKey().getName() === key) {
-                    return widgets[i];
-                }
+    private handleWidgetsUpdate(event: ApplicationEvent) {
+        const isWidgetUpdated = [
+                                    ApplicationEventType.INSTALLED,
+                                    ApplicationEventType.UNINSTALLED,
+                                    ApplicationEventType.STARTED,
+                                    ApplicationEventType.STOPPED,
+                                    ApplicationEventType.UPDATED
+                                ].indexOf(event.getEventType()) > -1;
+
+        if (isWidgetUpdated) {
+            const key = event.getApplicationKey().getName();
+
+            if (!this.widgetsUpdateList[key]) {
+                this.widgetsUpdateList[key] = AppHelper.debounce((k, type) => this.handleWidgetUpdate(k, type), 1000);
             }
-            return null;
-        }).catch((reason: any) => {
-            const msg = reason ? reason.message : i18n('notify.widget.error');
-            api.notify.showError(msg);
-            return null;
-        });
+            this.widgetsUpdateList[key](key, event.getEventType());
+        }
     }
 
     setDetailsContainerHeight() {
@@ -364,10 +330,41 @@ export class DetailsView extends api.dom.DivEl {
         }
     }
 
-    updateViewer() {
-        if (this.item) {
-            this.viewer.setObject(this.item.getContentSummary());
+    private handleWidgetUpdate(key: string, type: ApplicationEventType) {
+        let widgetView = this.getWidgetByKey(key);
+        const isActive = widgetView && this.activeWidget.getWidgetName() === widgetView.getWidgetName();
+
+        const isRemoved = [
+                              ApplicationEventType.UNINSTALLED,
+                              ApplicationEventType.STOPPED
+                          ].indexOf(type) > -1;
+
+        const isUpdated = !!widgetView;
+
+        const updateView = (useDefault?: boolean) => {
+            this.widgetsSelectionRow.updateWidgetsDropdown(this.widgetViews);
+            if (useDefault) {
+                this.activateDefaultWidget();
+            } else {
+                this.activeWidget.setActive();
+            }
+            this.widgetsSelectionRow.updateState(this.activeWidget);
+        };
+
+        if (isRemoved) {
+            this.removeWidgetByKey(key);
+
+            updateView(isActive);
+
+            return;
         }
+
+        this.fetchWidgetByKey(key).then((widget: Widget) => {
+            widgetView = WidgetView.create().setName(widget.getDisplayName()).setDetailsView(this).setWidget(widget).build();
+            isUpdated ? this.updateWidget(widgetView) : this.addWidget(widgetView);
+
+            updateView();
+        });
     }
 
     private layout(empty: boolean = true) {
@@ -382,7 +379,18 @@ export class DetailsView extends api.dom.DivEl {
         this.sizeChangedListeners.push(listener);
     }
 
-    notifyPanelSizeChanged() {
-        this.sizeChangedListeners.forEach((listener: ()=> void) => listener());
+    private fetchWidgetByKey(key: string): wemQ.Promise<Widget> {
+        return this.fetchCustomWidgetViews().then((widgets: Widget[]) => {
+            for (let i = 0; i < widgets.length; i++) {
+                if (widgets[i].getWidgetDescriptorKey().getApplicationKey().getName() === key) {
+                    return widgets[i];
+                }
+            }
+            return null;
+        }).catch((reason: any) => {
+            const msg = reason ? reason.message : i18n('notify.widget.error');
+            api.notify.showError(msg);
+            return null;
+        });
     }
 }
