@@ -1,3 +1,5 @@
+rootProject.name = projectName
+
 enableFeaturePreview('STABLE_PUBLISHING')
 
 if ( hasProperty( 'env' ) ) {
