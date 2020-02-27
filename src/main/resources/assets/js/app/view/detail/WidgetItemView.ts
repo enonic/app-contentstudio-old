@@ -32,15 +32,15 @@ export class WidgetItemView extends api.dom.DivEl {
         let linkEl = new LinkEl(this.getFullWidgetUrl(url, uid, contentId)).setAsync();
         let el = this.getEl();
         let onLinkLoaded = ((event: UIEvent) => {
-                let mainContainer = event.target['import'].body;
-                if (mainContainer) {
-                    let html = this.stripOffAssets(mainContainer.innerHTML);
-                    el.getHTMLElement().insertAdjacentHTML('beforeend', html);
-                }
+            let mainContainer = event.target['import'].body;
+            if (mainContainer) {
+                let html = this.stripOffAssets(mainContainer.innerHTML);
+                el.getHTMLElement().insertAdjacentHTML('beforeend', html);
+            }
 
-                linkEl.unLoaded(onLinkLoaded);
-                deferred.resolve(null);
-            });
+            linkEl.unLoaded(onLinkLoaded);
+            deferred.resolve(null);
+        });
 
         this.uid = uid;
         this.removeChildren();
@@ -52,17 +52,10 @@ export class WidgetItemView extends api.dom.DivEl {
     }
 
     private stripOffAssets(html: string): string {
-        let result = this.stripOffScripts(html);
-        // leave stylesheet links for FF & Safari due to bug in processing them
-        result = (api.BrowserHelper.isFirefox() || api.BrowserHelper.isSafari()) ? result : this.stripOffLinks(result);
-        return result;
+        return this.stripOffScripts(html);
     }
 
     private stripOffScripts(html: string): string {
         return html.replace(/(?:<script\b[^>]*>[\s\S]*?<\/script>)/gm, '');
-    }
-
-    private stripOffLinks(html: string): string {
-        return html.replace(/(?:<link\b[^<>]*[\\/]?>)/gm, '');
     }
 }
