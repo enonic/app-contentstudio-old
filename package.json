@@ -14,7 +14,7 @@
   "devDependencies": {
     "@types/ckeditor": "^4.9.1",
     "autoprefixer": "^8.1.0",
-    "browserslist": "^3.1.2",
+    "browserslist": "^4.16.3",
     "browserslist-config-enonic": "^1.0.3",
     "circular-dependency-plugin": "^4.2.1",
     "copy-webpack-plugin": "^4.5.1",
